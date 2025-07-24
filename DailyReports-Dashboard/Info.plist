@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>googleapis.com</key>
+            <dict>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <true/>
+                <key>NSExceptionMinimumTLSVersion</key>
+                <string>TLSv1.0</string>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+            </dict>
+        </dict>
+    </dict>
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.network.server</key>
+    <true/>
+    
+    <!-- DNS Resolution -->
+    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+    <array>
+        <string>com.apple.dnssd.service</string>
+        <string>com.apple.networkd</string>
+    </array>
+    
+    <!-- File Access (if needed) -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    
+    <!-- Disable App Sandbox (last resort) -->
+    <!-- Uncomment this line if above doesn't work -->
+   <key>com.apple.security.app-sandbox</key>
+    <false/>
+</dict>
+</plist>
