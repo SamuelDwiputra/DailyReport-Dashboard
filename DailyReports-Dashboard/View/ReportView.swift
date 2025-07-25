@@ -7,16 +7,18 @@
 
 import SwiftUI
 import FirebaseAuth
+import FirebaseFirestore
 
 struct ReportView: View {
     @StateObject private var firestoreManager = FirestoreManager()
     @EnvironmentObject var authManager: AuthManager
     
+    @State private var selectedPage: String = "Main"
+    
     var body: some View {
         HStack(spacing: 0) {
             // Left Sidebar
             VStack(alignment: .leading, spacing: 0) {
-                // Welcome Header
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Welcome to")
                         .font(.title2)
@@ -34,15 +36,20 @@ struct ReportView: View {
                 
                 // Navigation Menu
                 VStack(alignment: .leading, spacing: 4) {
-                    NavigationButton(title: "Main", isActive: false)
-                    NavigationButton(title: "Volunteer", isActive: false)
-                    NavigationButton(title: "Report History", isActive: true)
+                    NavigationButton(title: "Main", isActive: selectedPage == "Main") {
+                        selectedPage = "Main"
+                    }
+                    NavigationButton(title: "Volunteer", isActive: selectedPage == "Volunteer") {
+                        selectedPage = "Volunteer"
+                    }
+                    NavigationButton(title: "Report History", isActive: selectedPage == "Report History") {
+                        selectedPage = "Report History"
+                    }
                 }
                 .padding(.horizontal, 20)
                 
                 Spacer()
                 
-                // Sign Out Button
                 Button(action: {
                     try? Auth.auth().signOut()
                 }) {
@@ -67,30 +74,36 @@ struct ReportView: View {
                 )
             )
             
-            // Main Content Area
+            // Main Content
             VStack(alignment: .leading, spacing: 0) {
-                // Header
                 HStack {
-                    Text("Report History")
+                    Text(selectedPage)
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(.black)
-                    
                     Spacer()
                 }
                 .padding(.horizontal, 30)
                 .padding(.top, 30)
                 .padding(.bottom, 20)
                 
-                // Reports List
                 ScrollView {
-                    LazyVStack(spacing: 16) {
-                        ForEach(Array(firestoreManager.reports.enumerated()), id: \.element.id) { index, report in
-                            ReportCardView(report: report, firestoreManager: firestoreManager, reportIndex: index + 1)
+                    if selectedPage == "Main" {
+                        HeatmapView()
+                            .padding()
+                    } else if selectedPage == "Report History" {
+                        LazyVStack(spacing: 16) {
+                            ForEach(Array(firestoreManager.reports.enumerated()), id: \.element.id) { index, report in
+                                ReportCardView(report: report, firestoreManager: firestoreManager, reportIndex: index + 1)
+                            }
                         }
+                        .padding(.horizontal, 30)
+                        .padding(.bottom, 30)
+                    } else {
+                        Text("Coming soon: \(selectedPage)")
+                            .foregroundColor(.gray)
+                            .padding()
                     }
-                    .padding(.horizontal, 30)
-                    .padding(.bottom, 30)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -104,26 +117,30 @@ struct ReportView: View {
     }
 }
 
+// MARK: - Navigation Button
 struct NavigationButton: View {
     let title: String
     let isActive: Bool
+    let action: () -> Void
     
     var body: some View {
-        HStack {
-            Text(title)
-                .font(.headline)
-                .foregroundColor(.white)
-                .opacity(isActive ? 1.0 : 0.7)
-            Spacer()
+        Button(action: action) {
+            HStack {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .opacity(isActive ? 1.0 : 0.7)
+                Spacer()
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .background(isActive ? Color.white.opacity(0.2) : Color.clear)
+            .cornerRadius(8)
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .background(
-            isActive ? Color.white.opacity(0.2) : Color.clear
-        )
-        .cornerRadius(8)
+        .buttonStyle(PlainButtonStyle())
     }
 }
+
 
 struct ReportCardView: View {
     let report: Report
@@ -174,7 +191,7 @@ struct ReportCardView: View {
                 
                 
                 // Report Number
-                Text("Report No.\(String(format: "%05d", reportIndex))",)
+                Text("Report No.\(String(format: "%05d", reportIndex))")
                     .font(.system(size: 22, weight: .semibold))
                     .foregroundColor(.black)
                 
