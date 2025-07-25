@@ -18,30 +18,59 @@ struct HeatmapView: View {
     private let categories = ["trash", "crowd", "queue"]
 
     var body: some View {
+        
         VStack(alignment: .leading) {
+            HStack {
             Text("Booth Tracker")
                 .font(.title)
+                .foregroundColor(.black)
                 .bold()
-
-            Picker("Category", selection: $selectedCategory) {
-                ForEach(categories, id: \.self) { category in
-                    Text(category.capitalized).tag(category)
+//                Text ("")
+//                Spacer()
+                .padding(.horizontal)
+                Picker("" , selection: $selectedCategory) {
+                    ForEach(categories, id: \.self) { category in
+                        Text(category.capitalized).tag(category)
+                    }
                 }
+                .foregroundColor(.black)
+                .frame(width: 100, height: 50)
+    //            .pickerStyle(.segmented)
+                .padding(.vertical)
             }
-            .pickerStyle(.segmented)
-            .padding(.vertical)
-
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 10) {
-                ForEach(allBoothTagsSorted(), id: \.self) { tag in
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.pink)
-                        .opacity(opacity(for: tag))
-                        .frame(height: 50)
-                        .overlay(Text(tag).font(.caption).foregroundColor(.white))
-                }
-            }
+            
+            LazyVStack(spacing: 10) {
+                            ForEach(groupedBoothTags().keys.sorted(), id: \.self) { letter in
+                                // Row of paired booths for this letter
+                                LazyHGrid(rows: [GridItem(.flexible())], spacing: 40) {
+                                    ForEach(Array(pairTags(groupedBoothTags()[letter] ?? []).enumerated()), id: \.offset) { pairIndex, pair in
+                                        HStack(spacing: 10) {
+                                            ForEach(pair, id: \.self) { tag in
+                                                RoundedRectangle(cornerRadius: 6)
+                                                    .fill(Color.pink)
+                                                    .opacity(opacity(for: tag))
+                                                    .frame(width: 60, height: 50)
+                                                    .overlay(Text(tag).font(.caption).foregroundColor(.white))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+//            .background(Color.gray)
+//            .opacity(0.5)
             .padding(.top)
+            .padding(.bottom)
         }
+        
+        .background(
+            (Color.white)
+            .cornerRadius(8)
+            .opacity(0.5)
+//            .bold(true)
+//                    )
+            .cornerRadius(8)
+        )
         .padding()
         .onAppear {
             loadCategoryMappings()
@@ -54,7 +83,29 @@ struct HeatmapView: View {
         }
     }
 
-    private func loadCategoryMappings() {
+    
+    func groupedBoothTags() -> [String: [String]] {
+            let allTags = Set(boothTags.values).sorted()
+            var grouped: [String: [String]] = [:]
+            
+            for tag in allTags {
+                let firstLetter = String(tag.prefix(1)).uppercased()
+                grouped[firstLetter, default: []].append(tag)
+            }
+            
+            return grouped
+        }
+    
+    private func pairTags(_ tags: [String]) -> [[String]] {
+           var pairs: [[String]] = []
+           for i in stride(from: 0, to: tags.count, by: 2) {
+               let end = min(i + 2, tags.count)
+               pairs.append(Array(tags[i..<end]))
+           }
+           return pairs
+       }
+    
+    func loadCategoryMappings() {
         db.collection("Categories").getDocuments { snapshot, error in
             guard let documents = snapshot?.documents, error == nil else {
                 print("❌ Failed to load categories: \(error?.localizedDescription ?? "Unknown error")")
@@ -76,7 +127,7 @@ struct HeatmapView: View {
         }
     }
 
-    private func loadBoothTags() {
+    func loadBoothTags() {
         db.collection("Booths").getDocuments { snapshot, error in
             guard let documents = snapshot?.documents, error == nil else {
                 print("❌ Failed to load booths: \(error?.localizedDescription ?? "Unknown error")")
@@ -96,7 +147,7 @@ struct HeatmapView: View {
         }
     }
 
-    private func listenToReports() {
+    func listenToReports() {
         reportListener?.remove()
         reportCounts = [:]
         
@@ -135,11 +186,11 @@ struct HeatmapView: View {
             }
     }
 
-    private func allBoothTagsSorted() -> [String] {
+    func allBoothTagsSorted() -> [String] {
         return Set(boothTags.values).sorted()
     }
 
-    private func opacity(for tag: String) -> Double {
+    func opacity(for tag: String) -> Double {
         let count = reportCounts[tag] ?? 0
         switch count {
         case 20...: return 1.0
