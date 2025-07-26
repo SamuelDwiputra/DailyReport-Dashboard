@@ -18,60 +18,97 @@ struct HeatmapView: View {
     private let categories = ["trash", "crowd", "queue"]
 
     var body: some View {
-        
-        VStack(alignment: .leading) {
-            HStack {
-            Text("Booth Tracker")
-                .font(.title)
-                .foregroundColor(.black)
-                .bold()
-//                Text ("")
-//                Spacer()
-                .padding(.horizontal)
-                Picker("" , selection: $selectedCategory) {
-                    ForEach(categories, id: \.self) { category in
-                        Text(category.capitalized).tag(category)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 15) {
+                // Booth Tracker Section (Top)
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text("Booth Tracker")
+                            .font(.title2)
+                            .foregroundColor(.black)
+                            .bold()
+                        
+                        Spacer()
+                        
+                        Menu {
+                            ForEach(categories, id: \.self) { category in
+                                Button(action: {
+                                    selectedCategory = category
+                                }) {
+                                    Text(category.capitalized)
+                                }
+                            }
+                        } label: {
+                            Text(selectedCategory.capitalized)
+                                .font(.headline)
+                                .foregroundColor(.black)
+                                .background(Color.gray.opacity(0.2))
+                                .cornerRadius(8)
+                        }.frame(width: 150, height: 35)
                     }
-                }
-                .foregroundColor(.black)
-                .frame(width: 100, height: 50)
-    //            .pickerStyle(.segmented)
-                .padding(.vertical)
-            }
-            
-            LazyVStack(spacing: 10) {
-                            ForEach(groupedBoothTags().keys.sorted(), id: \.self) { letter in
-                                // Row of paired booths for this letter
-                                LazyHGrid(rows: [GridItem(.flexible())], spacing: 40) {
-                                    ForEach(Array(pairTags(groupedBoothTags()[letter] ?? []).enumerated()), id: \.offset) { pairIndex, pair in
-                                        HStack(spacing: 10) {
-                                            ForEach(pair, id: \.self) { tag in
-                                                RoundedRectangle(cornerRadius: 6)
-                                                    .fill(Color.pink)
-                                                    .opacity(opacity(for: tag))
-                                                    .frame(width: 60, height: 50)
-                                                    .overlay(Text(tag).font(.caption).foregroundColor(.white))
-                                            }
+                    .padding(.top)
+                    .padding(.horizontal)
+                    
+                    LazyVStack(spacing: 10) {
+                        ForEach(groupedBoothTags().keys.sorted(), id: \.self) { letter in
+                            LazyHGrid(rows: [GridItem(.flexible())], spacing: 40) {
+                                ForEach(Array(pairTags(groupedBoothTags()[letter] ?? []).enumerated()), id: \.offset) { pairIndex, pair in
+                                    HStack(spacing: 10) {
+                                        ForEach(pair, id: \.self) { tag in
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .fill(Color.pink)
+                                                .opacity(opacity(for: tag))
+                                                .frame(width: 60, height: 50)
+                                                .overlay(
+                                                    VStack {
+                                                        Text(tag)
+                                                            .font(.caption)
+                                                            .foregroundColor(.white)
+                                                            .bold()
+                                                        
+                                                        if let count = reportCounts[tag], count > 0 {
+                                                            Text("\(count)")
+                                                                .font(.caption2)
+                                                                .foregroundColor(.white)
+                                                        }
+                                                    }
+                                                )
                                         }
                                     }
                                 }
                             }
                         }
-//            .background(Color.gray)
-//            .opacity(0.5)
-            .padding(.top)
-            .padding(.bottom)
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 10)
+                }
+                .background(
+                    Color.white
+                        .cornerRadius(8)
+                        .opacity(0.7)
+                )
+                .padding(.horizontal)
+                
+                // Bottom Section with Charts
+                HStack(alignment: .top, spacing: 15) {
+                    // Left: Report Time Spike Chart
+                    VStack(alignment: .leading) {
+                        ReportTimeSpikeChart()
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    // Right: Category Pie Chart
+                    VStack(alignment: .leading) {
+                        CategoryPieChart()
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .padding(.horizontal)
+                
+                KeywordBarChart()
+                    .padding(.horizontal)
+            }
         }
-        
-        .background(
-            (Color.white)
-            .cornerRadius(8)
-            .opacity(0.5)
-//            .bold(true)
-//                    )
-            .cornerRadius(8)
-        )
-        .padding()
         .onAppear {
             loadCategoryMappings()
         }
@@ -83,27 +120,26 @@ struct HeatmapView: View {
         }
     }
 
-    
     func groupedBoothTags() -> [String: [String]] {
-            let allTags = Set(boothTags.values).sorted()
-            var grouped: [String: [String]] = [:]
-            
-            for tag in allTags {
-                let firstLetter = String(tag.prefix(1)).uppercased()
-                grouped[firstLetter, default: []].append(tag)
-            }
-            
-            return grouped
+        let allTags = Set(boothTags.values).sorted()
+        var grouped: [String: [String]] = [:]
+        
+        for tag in allTags {
+            let firstLetter = String(tag.prefix(1)).uppercased()
+            grouped[firstLetter, default: []].append(tag)
         }
+        
+        return grouped
+    }
     
     private func pairTags(_ tags: [String]) -> [[String]] {
-           var pairs: [[String]] = []
-           for i in stride(from: 0, to: tags.count, by: 2) {
-               let end = min(i + 2, tags.count)
-               pairs.append(Array(tags[i..<end]))
-           }
-           return pairs
-       }
+        var pairs: [[String]] = []
+        for i in stride(from: 0, to: tags.count, by: 2) {
+            let end = min(i + 2, tags.count)
+            pairs.append(Array(tags[i..<end]))
+        }
+        return pairs
+    }
     
     func loadCategoryMappings() {
         db.collection("Categories").getDocuments { snapshot, error in
@@ -194,10 +230,10 @@ struct HeatmapView: View {
         let count = reportCounts[tag] ?? 0
         switch count {
         case 20...: return 1.0
-        case 15...19: return 0.7
-        case 10...14: return 0.5
-        case 5...9: return 0.3
-        case 1...4: return 0.1
+        case 15...19: return 0.8
+        case 10...14: return 0.6
+        case 5...9: return 0.4
+        case 1...4: return 0.2
         default: return 0.05
         }
     }

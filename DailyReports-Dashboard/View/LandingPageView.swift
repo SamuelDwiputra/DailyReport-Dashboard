@@ -17,6 +17,7 @@ struct LandingPageView: View {
             ScrollView{
                 ZStack{
                     Color("White")
+                        .ignoresSafeArea()
                     
                     VStack {
                         ZStack {
@@ -78,10 +79,11 @@ struct LandingPageView: View {
                             .cornerRadius(10)
                             
                         }
-                        Spacer()
+                        Spacer().frame(height: geometry.size.height * 0.08)
+
                     }
-                }.frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
+                } .frame(maxHeight: .infinity, alignment: .top)
+            } .frame(minHeight: geometry.size.height)
         }
         .ignoresSafeArea()
     }
