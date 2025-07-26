@@ -45,9 +45,12 @@ struct HeatmapView: View {
                             Text(selectedCategory.capitalized)
                                 .font(.headline)
                                 .foregroundColor(.black)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
                                 .background(Color.gray.opacity(0.2))
                                 .cornerRadius(8)
-                        }.frame(width: 150, height: 35)
+                        }
+                        .frame(width: 150, height: 35)
                     }
                     .padding(.top)
                     .padding(.horizontal)
@@ -58,44 +61,11 @@ struct HeatmapView: View {
                                 ForEach(Array(pairTags(groupedBoothTags()[letter] ?? []).enumerated()), id: \.offset) { pairIndex, pair in
                                     HStack(spacing: 10) {
                                         ForEach(pair, id: \.self) { tag in
-                                            RoundedRectangle(cornerRadius: 6)
-                                                .fill(Color.pink)
-                                                .opacity(opacity(for: tag))
-                                                .frame(width: 60, height: 50)
-                                                .overlay(
-                                                    VStack {
-                                                        Text(tag)
-                                                            .font(.caption)
-                                                            .foregroundColor(.white)
-                                                            .bold()
-                                                        
-                                                        if let count = reportCounts[tag], count > 0 {
-                                                            Text("\(count)")
-                                                                .font(.caption2)
-                                                                .foregroundColor(.white)
-                                                        }
-                                                    }
-                                                )
-                }
-                .foregroundColor(.black)
-                .frame(width: 100, height: 50)
-    //            .pickerStyle(.segmented)
-                .padding(.vertical)
-            }
-            
-            LazyVStack(spacing: 10) {
-                            ForEach(groupedBoothTags().keys.sorted(), id: \.self) { letter in
-                                // Row of paired booths for this letter
-                                LazyHGrid(rows: [GridItem(.flexible())], spacing: 40) {
-                                    ForEach(Array(pairTags(groupedBoothTags()[letter] ?? []).enumerated()), id: \.offset) { pairIndex, pair in
-                                        HStack(spacing: 10) {
-                                            ForEach(pair, id: \.self) { tag in
-                                                HoverBox(
-                                                    tag: tag,
-                                                    boothName: boothNamesByTag[tag] ?? "Unknown",
-                                                    opacity: opacity(for: tag)
-                                                )
-                                            }
+                                            HoverBox(
+                                                tag: tag,
+                                                boothName: boothNamesByTag[tag] ?? "Unknown",
+                                                opacity: opacity(for: tag)
+                                            )
                                         }
                                     }
                                 }
@@ -114,33 +84,36 @@ struct HeatmapView: View {
                 
                 // Bottom Section with Charts
                 HStack(alignment: .top, spacing: 15) {
-                    // Left: Report Time Spike Chart
-                    VStack(alignment: .leading) {
-                        ReportTimeSpikeChart()
-                    }
-                    .frame(maxWidth: .infinity)
+                    // Left: Report Time Spike Chart with individual background
+                    ReportTimeSpikeChart()
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            Color.white
+                                .cornerRadius(8)
+                                .opacity(0.7)
+                        )
                     
                     // Right: Category Pie Chart
-                    VStack(alignment: .leading) {
-                        CategoryPieChart()
-                    }
-                    .frame(maxWidth: .infinity)
+                    CategoryPieChart()
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            Color.white
+                                .cornerRadius(8)
+                                .opacity(0.7)
+                        )
                 }
                 .padding(.horizontal)
                 
+                // KeywordBarChart
                 KeywordBarChart()
+                    .background(
+                        Color.white
+                            .cornerRadius(8)
+                            .opacity(0.7)
+                    )
                     .padding(.horizontal)
             }
         }
-        
-        .background(
-            (Color.white)
-            .cornerRadius(8)
-            .opacity(1)
-//            .bold(true)
-//                    )
-            .cornerRadius(8)
-        )
         .padding()
         .onAppear {
             loadCategoryMappings()
@@ -234,7 +207,7 @@ struct HeatmapView: View {
         
         print("🔍 Listening for categoryID: \(categoryID) (for category: \(selectedCategory))")
 
-        db.collection("Reports")
+        reportListener = db.collection("Reports")
             .whereField("categoryID", isEqualTo: categoryID)
             .addSnapshotListener { snapshot, error in
                 guard let documents = snapshot?.documents, error == nil else {
@@ -276,3 +249,4 @@ struct HeatmapView: View {
         }
     }
 }
+

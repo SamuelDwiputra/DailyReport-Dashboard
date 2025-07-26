@@ -4,7 +4,6 @@
 //
 //  Created by sam on 25/07/25.
 //
-
 import SwiftUI
 import Charts
 import FirebaseFirestore
@@ -51,13 +50,9 @@ struct KeywordBarChart: View {
                         .font(.caption)
                 }
             }
-
-
             .frame(height: CGFloat(keywordCounts.count * 28 + 60))
         }
         .padding()
-        .background(Color.white)
-        .cornerRadius(10)
         .onAppear {
             fetchAndProcessKeywords()
         }
@@ -92,5 +87,4 @@ struct KeywordBarChart: View {
             }
         }
     }
-
 }

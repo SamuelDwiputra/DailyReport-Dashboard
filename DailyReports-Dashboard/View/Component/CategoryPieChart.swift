@@ -4,7 +4,6 @@
 //
 //  Created by sam on 25/07/25.
 //
-
 import SwiftUI
 import Charts
 import FirebaseFirestore
@@ -31,23 +30,16 @@ struct CategoryPieChart: View {
                 .bold()
                 .foregroundStyle(Color.black)
             
-            
             HStack {
                 pieChartView
                 categoryLegend
                 Spacer()
             }
             .padding()
-           
             .cornerRadius(10)
-        }.padding(.top)
+        }
+        .padding(.top)
         .padding(.horizontal)
-        .background(
-            Color.white
-                .cornerRadius(8)
-                .opacity(0.7)
-        )
-        
         .onAppear {
             loadDataSequentially()
         }
@@ -72,7 +64,6 @@ struct CategoryPieChart: View {
                     .opacity(0.8)
                 }
                 .frame(width: 200, height: 200)
-             
             }
         }
     }
@@ -100,7 +91,6 @@ struct CategoryPieChart: View {
                     .font(.title2)
                     .fontWeight(.medium)
                     .foregroundColor(.black)
-              
             }
         }
     }
