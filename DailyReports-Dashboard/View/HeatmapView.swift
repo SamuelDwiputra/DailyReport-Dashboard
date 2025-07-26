@@ -8,9 +8,12 @@ import SwiftUI
 import FirebaseFirestore
 
 struct HeatmapView: View {
+    
+    @State private var boothNamesByTag: [String: String] = [:] // tag: name
+    @State private var isHovering = false
     @State private var selectedCategory = "trash"
     @State private var boothTags: [String: String] = [:] // [locationID: tag]
-    @State private var reportCounts: [String: Int] = [:] // [tag: count]
+    @State var reportCounts: [String: Int] = [:] // [tag: count]
     @State private var reportListener: ListenerRegistration?
     @State private var categoryMappings: [String: String] = [:] // [categoryName: categoryID]
 
@@ -73,6 +76,26 @@ struct HeatmapView: View {
                                                         }
                                                     }
                                                 )
+                }
+                .foregroundColor(.black)
+                .frame(width: 100, height: 50)
+    //            .pickerStyle(.segmented)
+                .padding(.vertical)
+            }
+            
+            LazyVStack(spacing: 10) {
+                            ForEach(groupedBoothTags().keys.sorted(), id: \.self) { letter in
+                                // Row of paired booths for this letter
+                                LazyHGrid(rows: [GridItem(.flexible())], spacing: 40) {
+                                    ForEach(Array(pairTags(groupedBoothTags()[letter] ?? []).enumerated()), id: \.offset) { pairIndex, pair in
+                                        HStack(spacing: 10) {
+                                            ForEach(pair, id: \.self) { tag in
+                                                HoverBox(
+                                                    tag: tag,
+                                                    boothName: boothNamesByTag[tag] ?? "Unknown",
+                                                    opacity: opacity(for: tag)
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -109,6 +132,16 @@ struct HeatmapView: View {
                     .padding(.horizontal)
             }
         }
+        
+        .background(
+            (Color.white)
+            .cornerRadius(8)
+            .opacity(1)
+//            .bold(true)
+//                    )
+            .cornerRadius(8)
+        )
+        .padding()
         .onAppear {
             loadCategoryMappings()
         }
@@ -171,14 +204,20 @@ struct HeatmapView: View {
             }
 
             var mapping: [String: String] = [:]
+            var nameMapping: [String: String] = [:]
+
             for doc in documents {
                 let locationID = doc.documentID
                 let tag = doc.data()["tag"] as? String ?? ""
+                let name = doc.data()["name"] as? String ?? ""
                 mapping[locationID] = tag
+                nameMapping[tag] = name
             }
             print("📌 Booth Tags Loaded:", mapping)
 
             self.boothTags = mapping
+            self.boothNamesByTag = nameMapping
+
             listenToReports()
         }
     }
@@ -229,12 +268,11 @@ struct HeatmapView: View {
     func opacity(for tag: String) -> Double {
         let count = reportCounts[tag] ?? 0
         switch count {
-        case 20...: return 1.0
-        case 15...19: return 0.8
-        case 10...14: return 0.6
-        case 5...9: return 0.4
-        case 1...4: return 0.2
-        default: return 0.05
+        case 21...: return 1.0
+        case 15...20: return 0.8
+        case 9...14: return 0.6
+        case 1...8: return 0.3
+        default: return 0.1
         }
     }
 }
