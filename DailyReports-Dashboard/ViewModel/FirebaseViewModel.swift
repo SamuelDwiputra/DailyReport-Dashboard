@@ -37,6 +37,11 @@ struct User: Identifiable, Codable {
     var role: String
 }
 
+struct Gallery: Identifiable, Codable {
+    var id: String
+    var url: String
+}
+
 class FirestoreManager: ObservableObject {
     
     private var db = Firestore.firestore()
@@ -99,6 +104,45 @@ class FirestoreManager: ObservableObject {
     
     //showing data section for pickers and add form
     
+    func showAllPictures() {
+        db.collection("Reports").addSnapshotListener { snapshot, error in
+            if let error = error {
+                print("❌ Error getting reports: \(error.localizedDescription)")
+                return
+            }
+
+            self.reports = snapshot?.documents.compactMap { document in
+                let data = document.data()
+
+                guard
+                    let categoryID = data["categoryID"] as? String,
+                    let description = data["description"] as? String,
+                    let locationID = data["locationID"] as? String,
+                    let timestamp = data["reportTime"] as? Timestamp,
+                    let volunteerID = data["volunteerID"] as? String
+                else {
+                    print("⚠️ Skipping document \(document.documentID): Missing required fields")
+                    return nil
+                }
+
+                let imageURL = data["imageURL"] as? String
+                let reportTime = timestamp.dateValue()
+
+                return Report(
+                    id: document.documentID,
+                    categoryID: categoryID,
+                    description: description,
+                    locationID: locationID,
+                    reportTime: reportTime,
+                    volunteerID: volunteerID,
+                    imageURL: imageURL
+                )
+            } ?? []
+        }
+    }
+
+
+    
     func showAllCategory() {
         db.collection("Categories").addSnapshotListener { snapshot, error in
             if let error = error {
@@ -151,6 +195,7 @@ class FirestoreManager: ObservableObject {
     }
     
     //fetch section
+    
     
     func getCategoryName(fromCategoryID categoryID: String, completion: @escaping (String) -> Void) {
         db.collection("Categories").document(categoryID).getDocument { snapshot, error in

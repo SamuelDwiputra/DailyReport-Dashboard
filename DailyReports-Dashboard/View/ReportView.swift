@@ -45,6 +45,9 @@ struct ReportView: View {
                     NavigationButton(title: "Report History", isActive: selectedPage == "Report History") {
                         selectedPage = "Report History"
                     }
+                    NavigationButton(title: "Gallery", isActive: selectedPage == "Gallery") {
+                        selectedPage = "Gallery"
+                    }
                 }
                 .padding(.horizontal, 20)
                 
@@ -99,6 +102,8 @@ struct ReportView: View {
                         }
                         .padding(.horizontal, 30)
                         .padding(.bottom, 30)
+                    } else if selectedPage == "Gallery" {
+                        GalleryView()
                     } else {
                         Text("Coming soon: \(selectedPage)")
                             .foregroundColor(.gray)

@@ -37,7 +37,7 @@ struct HoverBox: View {
                     }
                 }
 
-            if isHovered && hasData {
+            if isHovered {
                 Text(boothName)
                     .font(.caption2)
                     .padding(6)
