@@ -12,6 +12,7 @@ struct HoverBox: View {
     let tag: String
     let boothName: String
     let opacity: Double
+    let reportCount: Int
 
     @State private var isHovered = false
 
@@ -27,9 +28,15 @@ struct HoverBox: View {
                 .opacity(hasData ? opacity : 0.3)
                 .frame(width: 60, height: 50)
                 .overlay(
-                    Text(tag)
-                        .font(.caption)
-                        .foregroundColor(.white)
+                    VStack(spacing: 2) {
+                        Text(tag)
+                            .font(.caption)
+                            .foregroundColor(.white)
+                        Text("\(reportCount)")
+                            .font(.caption2)
+                            .foregroundColor(.white)
+                            .fontWeight(.semibold)
+                    }
                 )
                 .onHover { hovering in
                     withAnimation(.easeInOut(duration: 0.2)) {
@@ -38,16 +45,21 @@ struct HoverBox: View {
                 }
 
             if isHovered {
-                Text(boothName)
-                    .font(.caption2)
-                    .padding(6)
-                    .background(Color.black.opacity(0.8))
-                    .foregroundColor(.white)
-                    .cornerRadius(6)
-                    .offset(y: -40)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                VStack(spacing: 4) {
+                    Text(boothName)
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                    Text("\(reportCount) Report\(reportCount == 1 ? "" : "s")")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                }
+                .padding(8)
+                .background(Color.black.opacity(0.8))
+                .foregroundColor(.white)
+                .cornerRadius(6)
+                .offset(y: -50)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
     }
 }
-

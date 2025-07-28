@@ -64,7 +64,8 @@ struct HeatmapView: View {
                                             HoverBox(
                                                 tag: tag,
                                                 boothName: boothNamesByTag[tag] ?? "Unknown",
-                                                opacity: opacity(for: tag)
+                                                opacity: opacity(for: tag),
+                                                reportCount: reportCounts[tag] ?? 0
                                             )
                                         }
                                     }

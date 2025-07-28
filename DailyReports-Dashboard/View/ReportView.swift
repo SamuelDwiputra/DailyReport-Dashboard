@@ -96,8 +96,8 @@ struct ReportView: View {
                             .padding()
                     } else if selectedPage == "Report History" {
                         LazyVStack(spacing: 16) {
-                            ForEach(Array(firestoreManager.reports.enumerated()), id: \.element.id) { index, report in
-                                ReportCardView(report: report, firestoreManager: firestoreManager, reportIndex: index + 1)
+                            ForEach(Array(firestoreManager.reports.sorted { $0.reportTime > $1.reportTime }.enumerated()), id: \.element.id) { index, report in
+                                ReportCardView(report: report, firestoreManager: firestoreManager, reportIndex: firestoreManager.reports.count - index)
                             }
                         }
                         .padding(.horizontal, 30)
@@ -240,7 +240,7 @@ struct ReportCardView: View {
                     Text("Time :")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.black)
-                    Text(report.reportTime.formatted(date: .omitted, time: .shortened))
+                    Text(report.reportTime.formatted(date: .complete, time: .shortened))
                         .font(.system(size: 14))
                         .foregroundColor(.black)
                 }
